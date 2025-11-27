@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { auth } from '../firebase';
+import { auth, db } from '../firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
 
 const AuthContext = createContext();
 
@@ -19,12 +20,16 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       await signOut(auth);
-      localStorage.removeItem('token');
+      try { localStorage.removeItem('token'); } catch {}
+      try { localStorage.removeItem('userType'); } catch {}
+      try { localStorage.removeItem('userId'); } catch {}
       setCurrentUser(null);
     } catch (error) {
       console.error('Error logging out:', error);
       // Clear token and user even if signOut fails
-      localStorage.removeItem('token');
+      try { localStorage.removeItem('token'); } catch {}
+      try { localStorage.removeItem('userType'); } catch {}
+      try { localStorage.removeItem('userId'); } catch {}
       setCurrentUser(null);
     }
   };
@@ -32,23 +37,38 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        // User is signed in
-        setCurrentUser({
-          uid: user.uid,
-          email: user.email,
-          // Additional user data will be fetched from Firestore when needed
-        });
-        // Ensure we have a fresh ID token stored for API requests
-        user.getIdToken().then((idToken) => {
+        // User is signed in — fetch Firestore profile to include userType
+        (async () => {
           try {
-            localStorage.setItem('token', idToken);
-          } catch {}
-        }).catch(() => {});
+            const userDocRef = doc(db, 'users', user.uid);
+            const userDoc = await getDoc(userDocRef);
+            const userData = userDoc && userDoc.exists() ? userDoc.data() : {};
+
+            setCurrentUser({
+              uid: user.uid,
+              email: user.email,
+              userType: userData.userType || localStorage.getItem('userType') || null,
+              profile: userData.profileData || null
+            });
+
+            // Store token and role for API requests and quick access
+            try {
+              const idToken = await user.getIdToken();
+              localStorage.setItem('token', idToken);
+            } catch {}
+            try { if (userData.userType) localStorage.setItem('userType', userData.userType); } catch {}
+            try { localStorage.setItem('userId', user.uid); } catch {}
+          } catch (err) {
+            // If Firestore read fails, set minimal user and still store token
+            setCurrentUser({ uid: user.uid, email: user.email });
+            try { const idToken = await user.getIdToken(); localStorage.setItem('token', idToken); } catch {}
+          }
+        })();
       } else {
         // User is signed out
-        try {
-          localStorage.removeItem('token');
-        } catch {}
+        try { localStorage.removeItem('token'); } catch {}
+        try { localStorage.removeItem('userType'); } catch {}
+        try { localStorage.removeItem('userId'); } catch {}
         setCurrentUser(null);
       }
       setLoading(false);
