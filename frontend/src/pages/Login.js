@@ -17,27 +17,37 @@ const Login = () => {
     setError('');
 
     try {
+      console.log('🔐 Attempting login for:', email);
+      
       // Sign in with Firebase Auth
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+      console.log('✅ Firebase Auth successful for UID:', user.uid);
 
       // Get user data from Firestore
+      console.log('📄 Fetching user document from Firestore...');
       const userDoc = await getDoc(doc(db, 'users', user.uid));
+      
       if (!userDoc.exists()) {
-        throw new Error('User data not found');
+        console.error('❌ User document does not exist in Firestore');
+        throw new Error('User data not found in Firestore');
       }
 
       const userData = userDoc.data();
+      console.log('✅ User data retrieved:', userData);
       const userType = userData.userType;
 
       // Store user info in localStorage
       localStorage.setItem('userType', userType);
       localStorage.setItem('userId', user.uid);
+      console.log('💾 Stored user info in localStorage');
 
       // Update auth context
       login({ uid: user.uid, email, userType });
+      console.log('✅ Auth context updated');
 
       // Redirect based on user type
+      console.log('🔀 Redirecting to dashboard for userType:', userType);
       switch (userType) {
         case 'admin':
           window.location.href = '/admin';
@@ -55,10 +65,12 @@ const Login = () => {
           window.location.href = '/';
       }
     } catch (error) {
-      console.error('Login error:', error);
-      try {
-        console.error('Login error code:', error.code);
-      } catch {}
+      console.error('❌ Login error:', error);
+      console.error('Error details:', {
+        message: error?.message,
+        code: error?.code,
+        stack: error?.stack
+      });
       const errorMessage = (error && (error.message || error.code)) || 'Login failed';
       setError(errorMessage);
       alert('Login failed: ' + errorMessage);
