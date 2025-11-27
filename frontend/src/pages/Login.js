@@ -56,7 +56,10 @@ const Login = () => {
       }
     } catch (error) {
       console.error('Login error:', error);
-      const errorMessage = error.message || 'Login failed';
+      try {
+        console.error('Login error code:', error.code);
+      } catch {}
+      const errorMessage = (error && (error.message || error.code)) || 'Login failed';
       setError(errorMessage);
       alert('Login failed: ' + errorMessage);
     } finally {

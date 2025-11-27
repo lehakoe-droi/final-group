@@ -55,7 +55,7 @@ try {
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
       databaseURL: "https://group2-e1233-default-rtdb.firebaseio.com",
-      storageBucket: "group2-e1233.firebasestorage.app"
+      storageBucket: "group2-e1233.appspot.com"
     });
   }
 
@@ -97,7 +97,7 @@ try {
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
         databaseURL: "https://group2-e1233-default-rtdb.firebaseio.com",
-        storageBucket: "group2-e1233.firebasestorage.app"
+        storageBucket: "group2-e1233.appspot.com"
       });
     }
     db = admin.firestore();
@@ -116,8 +116,9 @@ app.use(cors({
     'http://127.0.0.1:3000',
     'http://localhost:3001',
     'http://127.0.0.1:3001',
-    'https://final-group-9.onrender.com',  // Frontend URL
-    'https://final-group-11.onrender.com'  // Alternative frontend URL
+    'https://final-group-1.onrender.com',   // Current deployed frontend
+    'https://final-group-9.onrender.com',   // Alternative frontend URL
+    'https://final-group-11.onrender.com'   // Alternative frontend URL
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
