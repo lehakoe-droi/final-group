@@ -1,4 +1,4 @@
-// App.js - Updated
+// App.js - Fixed
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
@@ -15,12 +15,7 @@ import CompanyDashboard from './pages/company/Dashboard';
 function App() {
   return (
     <AuthProvider>
-      <Router
-        future={{
-          v7_startTransition: true,
-          v7_relativeSplatPath: true
-        }}
-      >
+      <Router>
         <div className="App">
           <Routes>
             <Route path="/" element={<Home />} />
